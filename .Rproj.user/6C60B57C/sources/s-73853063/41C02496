@@ -1,0 +1,25 @@
+{
+    "id": "41C02496",
+    "path": "E:/Project/rpCycle/R/example.R",
+    "project_path": "R/example.R",
+    "type": "r_source",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1652936949705.0,
+    "source_on_save": false,
+    "relative_order": 3,
+    "properties": {
+        "tempName": "Untitled1",
+        "cursorPosition": "2,20",
+        "scrollLine": "0"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1652937990,
+    "encoding": "CP936",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1652937990998,
+    "read_only": false,
+    "read_only_alternatives": []
+}

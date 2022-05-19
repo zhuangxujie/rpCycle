@@ -1,0 +1,11 @@
+Package: rpCycle
+Type: Package
+Title: The relative proportion of cells in each cell cycle phase for samples
+Version: 0.1.0
+Author: Xujie Zhuang
+Maintainer: Xujie Zhuang <xujie_zhuang@126.com>
+Description: This package mainly contains a genemarker file, a function to calculate the relative ratio of each cell cycle, and an example.
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.2

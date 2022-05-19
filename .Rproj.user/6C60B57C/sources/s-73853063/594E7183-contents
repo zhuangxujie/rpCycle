@@ -1,0 +1,516 @@
+rm(list = ls())
+
+# 第一种：marker gene list，一共6个细胞周期：G1S,S,G2,G2M,M, MG1
+
+# 先制作cell cycle gene markers矩阵
+# 周期包括：G1S, S, G2, G2M, M, MG1
+setwd("E:\\Project\\MasterDOC\\DLBCL\\Graphics and PPT and Table\\graphics\\Cell cycle analysis for GEP in tissue\\gene marker")
+# revelio 中有G1S, S, G2, G2M, MG1
+revelio <- read.csv("Revelio cell cycle phase marker genes.csv", colClasses = "character")
+str(revelio)
+# peco有M, S, G1S, MG1, G2
+peco <- read.csv("peco cell cycle phase marker genes.csv", colClasses = "character")
+# seurat有S, G2M
+seurat <- read.csv("Seurat cell cycle phase  marker genes.csv", colClasses = "character")
+# reCAT有G1, G1S, G2, G2M, M S
+reCAT <- read.csv("reCAT-A cyclebase 3.0 378genes from dozens of cell cycle-related papers.csv", colClasses = "character")
+unique(reCAT$Peaktime)
+
+G1S <- unique(c(revelio$G1.S,
+                peco$G1S.gene,
+                reCAT$Genename[which(reCAT$Peaktime == "G1/S")]))
+G1S <- G1S[!is.na(G1S)]
+
+S <- unique(c(revelio$S,
+              peco$S.gene,
+              seurat$S.genes,
+              reCAT$Genename[which(reCAT$Peaktime == "S")]))
+S <- S[!is.na(S)]
+
+G2 <- unique(c(revelio$G2,
+               peco$G2.gene,
+               reCAT$Genename[which(reCAT$Peaktime == "G2")]))
+G2 <- G2[!is.na(G2)]
+
+G2M <- unique(c(revelio$G2.M,
+                seurat$G2M.genes,
+                reCAT$Genename[which(reCAT$Peaktime == "G2/M")]))
+G2M <- G2M[!is.na(G2M)]
+
+
+M <- unique(c(peco$M.gene, reCAT$Genename[which(reCAT$Peaktime == "M")]))
+M <- M[!is.na(M)]
+
+
+MG1 <- unique(c(revelio$M.G1, peco$MG1.gene))
+MG1 <- MG1[!is.na(MG1)]
+
+G2 <- G2[-which(G2 %in% c("221690_s_at", "254941", "326858", "254647", "2948588"))]
+G2M <- G2M[-which(G2M %in% "254622")]
+M <- M[-which(M %in% "220644_at")]
+marker6 <- list(G1S = G1S, S = S, G2 = G2, G2M = G2M, M = M, MG1 = MG1)
+
+save(marker6, file = "E:\\Project\\GEPCycle\\GEPCycle\\data\\marker6.rda")
+save(marker6, file = "marker6.rda")
+
+
+
+
+# 第二种：marker gene list，一共3个细胞周期：G1,S,G2M
+# 使用reCAT和seurat中的数据
+rm(list = ls())
+setwd("E:\\Project\\MasterDOC\\DLBCL\\Graphics and PPT and Table\\graphics\\Cell cycle analysis for GEP in tissue\\gene marker")
+# seurat有S, G2M
+seurat <- read.csv("Seurat cell cycle phase  marker genes.csv", colClasses = "character")
+# reCAT有G1, G1S, G2, G2M, M S
+reCAT <- read.csv("reCAT-A cyclebase 3.0 378genes from dozens of cell cycle-related papers.csv", colClasses = "character")
+unique(reCAT$Peaktime)
+
+G1 <- reCAT$Genename[which(reCAT$Peaktime == "G1")]
+S <- unique(c(seurat$S.genes, reCAT$Genename[which(reCAT$Peaktime == "S")]))
+G2M <- unique(c(seurat$G2M.genes, reCAT$Genename[which(reCAT$Peaktime == "G2/M")]))
+library(gplots)
+venn(list(reCAT$Genename[which(reCAT$Peaktime == "S")], reCAT$Genename[which(reCAT$Peaktime == "G2/M")]))
+venn(list(G1, S, G2M)) # 发现G1与S有重复的基因
+G1.S <- intersect(G1, S)
+library(dplyr)
+G1 <- G1[-which(G1 %in% G1.S)]
+S <- S[-which(S %in% G1.S)]
+G1
+G1 <- G1[-which(G1 %in% "202708_s_at")]
+G1
+S
+S <- S[!is.na(S)]
+S
+G2M
+G2M <- G2M[-which(G2M %in% "254622")]
+G2M
+venn(list(G1, S, G2M))
+marker3 <- list(G1 = G1, S = S, G2M = G2M)
+marker3
+save(marker3, file = "E:\\Project\\GEPCycle\\GEPCycle\\data\\marker3.rda")
+save(marker3, file = "marker3.rda")
+
+
+
+
+
+# 第三种：marker gene list，一共4个细胞周期：G1,S,G2,M
+# 使用reCAT和seurat中的数据
+rm(list = ls())
+setwd("E:\\Project\\MasterDOC\\DLBCL\\Graphics and PPT and Table\\graphics\\Cell cycle analysis for GEP in tissue\\gene marker")
+# seurat有S, G2M
+seurat <- read.csv("Seurat cell cycle phase  marker genes.csv", colClasses = "character")
+# reCAT有G1, G1S, G2, G2M, M, S
+reCAT <- read.csv("reCAT-A cyclebase 3.0 378genes from dozens of cell cycle-related papers.csv", colClasses = "character")
+unique(reCAT$Peaktime)
+
+G1 <- reCAT$Genename[which(reCAT$Peaktime == "G1")]
+S <- unique(c(seurat$S.genes, reCAT$Genename[which(reCAT$Peaktime == "S")]))
+G2 <- reCAT$Genename[which(reCAT$Peaktime == "G2")]
+M <- reCAT$Genename[which(reCAT$Peaktime == "M")]
+
+G1.S <- intersect(G1, S)
+library(dplyr)
+G1 <- G1[-which(G1 %in% G1.S)]
+G1 <- G1[-which(G1 %in% "202708_s_at")]
+S <- S[-which(S %in% G1.S)]
+library(gplots)
+venn(list(G1, S, G2, M)) # 发现S和G2有1个共同的gene，G2和M有一个共同的基因
+S.G2 <- intersect(G2, S)
+S.M <- intersect(M, S)
+S <- S[-which(S %in% c(S.G2, S.M))]
+G2 <- G2[-which(G2 %in% S.G2)]
+G2 <- G2[-which(G2 %in% c("221690_s_at", "254941", "326858", "254647", "2948588"))]
+M <- M[-which(M %in% S.M)]
+M <- M[-which(M %in% "220644_at")]
+venn(list(G1, S, G2, M)) # 各周期的list中已经没有交集了
+marker4 <- list(G1 = G1, S = S, G2 = G2, M = M)
+
+save(marker4, file = "E:\\Project\\GEPCycle\\GEPCycle\\data\\marker4.rda")
+save(marker4, file = "marker4.rda")
+
+
+
+# 以csv的格式保存各个marker gene
+rm(list = ls())
+setwd("E:\\Project\\MasterDOC\\DLBCL\\Graphics and PPT and Table\\graphics\\Cell cycle analysis for GEP in tissue\\gene marker")
+load("marker3.rda")
+load("marker4.rda")
+load("marker6.rda")
+# marker3的gene list
+l <- max(lengths(marker3))
+G1 <- c(marker3$G1, rep(NA, l - length(marker3$G1)))
+S <- c(marker3$S, rep(NA, l - length(marker3$S)))
+lengths(marker3)
+marker3.f <- data.frame(G1 = G1, S = S, G2M = marker3$G2M)
+write.csv(marker3.f, "marker3.csv")
+
+# marker4的gene list
+l <- max(lengths(marker4))
+G1 <- c(marker4$G1, rep(NA, l - length(marker4$G1)))
+S <- c(marker4$S, rep(NA, l - length(marker4$S)))
+M <- c(marker4$M, rep(NA, l - length(marker4$M)))
+marker4.f <- data.frame(G1 = G1, S = S, G2 = marker4$G2, M = M)
+write.csv(marker4.f, "marker4.csv")
+
+# marker6 的gene list
+l <- max(lengths(marker6))
+G1S <- c(marker6$G1S, rep(NA, l - length(marker6$G1S)))
+S <- c(marker6$S, rep(NA, l - length(marker6$S)))
+G2 <- c(marker6$G2, rep(NA, l - length(marker6$G2)))
+M <- c(marker6$M, rep(NA, l - length(marker6$M)))
+MG1 <- c(marker6$MG1, rep(NA, l - length(marker6$MG1)))
+marker6.f <- data.frame(G1S = G1S, S = S, G2 = G2, G2M = marker6$G2M, M = M, MG1 = MG1)
+write.csv(marker6.f, "marker6.csv")
+
+
+
+
+
+
+# 加载表达值
+expr <- read.csv("E:\\Project\\MasterDOC\\DLBCL\\data\\GSE10846\\06_GSE10846_ProteinCoding\\Copy-NoNA_join_onegenesymbol_only_proteincoding_GCRh37.75_414 patients GSE10846.csv",
+                 row.names = 1)
+class(expr)
+myexpr <- as.matrix(expr)
+save(myexpr, file = "E:\\Project\\GEPCycle\\GEPCycle\\data\\myexpr.rda")
+
+
+
+
+
+
+
+# 第四种：marker gene list，一共3个细胞周期：G1,S,G2M （更新）
+# 使用reCAT和seurat， revelio中的数据
+rm(list = ls())
+setwd("E:\\Project\\MasterDOC\\DLBCL\\Graphics and PPT and Table\\graphics\\Cell cycle analysis for GEP in tissue\\gene marker")
+# seurat有S, G2M
+seurat <- read.csv("Seurat cell cycle phase  marker genes.csv", colClasses = "character")
+# reCAT有G1, G1S, G2, G2M, M S
+reCAT <- read.csv("reCAT-A cyclebase 3.0 378genes from dozens of cell cycle-related papers.csv", colClasses = "character")
+unique(reCAT$Peaktime)
+# revelio 中有G1S, S, G2, G2M, MG1
+revelio <- read.csv("Revelio cell cycle phase marker genes.csv", colClasses = "character")
+str(revelio)
+# peco有M, S, G1S, MG1, G2
+peco <- read.csv("peco cell cycle phase marker genes.csv", colClasses = "character")
+
+library(gplots)
+venn(list(seurat$S.genes[!is.na(seurat$S.genes)], reCAT$Genename[which(reCAT$Peaktime == "S")], revelio$S[!is.na(revelio$S)], peco$S.gene[!is.na(peco$S.gene)])) # 发现S和G2有1个共同的gene，G2和M有一个共同的基因
+
+
+G1 <- reCAT$Genename[which(reCAT$Peaktime == "G1")]
+S <- seurat$S.genes #, reCAT$Genename[which(reCAT$Peaktime == "S")]))
+G2M <- seurat$G2M.genes# , reCAT$Genename[which(reCAT$Peaktime == "G2/M")]))
+library(gplots)
+#venn(list(reCAT$Genename[which(reCAT$Peaktime == "S")], reCAT$Genename[which(reCAT$Peaktime == "G2/M")]))
+venn(list(G1, S, G2M)) # 发现G1与S有重复的基因
+g1s <- intersect(G1, S)
+G1 <- G1[-which(G1 %in% g1s)]
+venn(list(G1, S, G2M))
+
+marker3.up2 <- list(G1 = G1, S = S, G2M = G2M)
+marker3.up2
+save(marker3.up2, file = "E:\\Project\\GEPCycle\\GEPCycle\\data\\marker3up2.rda")
+save(marker3.up2, file = "marker3up2.rda")
+
+
+
+
+
+
+
+
+
+
+
+# marker gene 测试list
+# 使用reCAT和seurat中的数据
+rm(list = ls())
+setwd("E:\\Project\\MasterDOC\\DLBCL\\Graphics and PPT and Table\\graphics\\Cell cycle analysis for GEP in tissue\\gene marker")
+# seurat有S, G2M
+seurat <- read.csv("Seurat cell cycle phase  marker genes.csv", colClasses = "character")
+# reCAT有G1, G1S, G2, G2M, M S
+reCAT <- read.csv("reCAT-A cyclebase 3.0 378genes from dozens of cell cycle-related papers.csv", colClasses = "character")
+unique(reCAT$Peaktime)
+
+G1 <- reCAT$Genename[which(reCAT$Peaktime == "G1")]
+S <- seurat$S.genes
+G2M <- seurat$G2M.genes
+library(gplots)
+venn(list(reCAT$Genename[which(reCAT$Peaktime == "S")], reCAT$Genename[which(reCAT$Peaktime == "G2/M")]))
+venn(list(G1, S, G2M)) # 发现G1与S有重复的基因
+
+G1 <- G1[-which(G1 %in% "202708_s_at")]
+S <- S[!is.na(S)]
+S
+venn(list(G1, S, G2M))
+markertest2 <- list(G1 = G1, S = S, G2M = G2M)
+markertest2
+save(markertest2, file = "E:\\Project\\GEPCycle\\GEPCycle\\data\\markertest2.rda")
+
+
+
+
+
+
+G1 <- reCAT$Genename[which(reCAT$Peaktime == "G1")]
+S <- seurat$S.genes
+G2M <- seurat$G2M.genes
+library(gplots)
+venn(list(reCAT$Genename[which(reCAT$Peaktime == "S")], reCAT$Genename[which(reCAT$Peaktime == "G2/M")]))
+venn(list(G1, S, G2M)) # 发现G1与S有重复的基因
+G1.S <- intersect(G1, S)
+library(dplyr)
+G1 <- G1[-which(G1 %in% G1.S)]
+# S <- S[-which(S %in% G1.S)]
+G1
+G1 <- G1[-which(G1 %in% "202708_s_at")]
+G1
+S
+S <- S[!is.na(S)]
+S
+G2M
+#G2M <- G2M[-which(G2M %in% "254622")]
+#G2M
+venn(list(G1, S, G2M))
+markertest3 <- list(G1 = G1, S = S, G2M = G2M)
+markertest3
+save(markertest3, file = "E:\\Project\\GEPCycle\\GEPCycle\\data\\markertest3.rda")
+
+
+
+
+
+
+
+
+
+# revelio 中有G1S, S, G2, G2M, MG1
+revelio <- read.csv("Revelio cell cycle phase marker genes.csv", colClasses = "character")
+str(revelio)
+# peco有M, S, G1S, MG1, G2
+peco <- read.csv("peco cell cycle phase marker genes.csv", colClasses = "character")
+
+G1 <- reCAT$Genename[which(reCAT$Peaktime == "G1")]
+S.temp <- intersect(reCAT$Genename[which(reCAT$Peaktime == "S")], peco$S.gene)
+S.temp2 <- intersect(S.temp, revelio$S)
+S <- unique(c(seurat$S.genes, S.temp2))
+G2M <- seurat$G2M.genes
+library(gplots)
+#venn(list(reCAT$Genename[which(reCAT$Peaktime == "S")], reCAT$Genename[which(reCAT$Peaktime == "G2/M")]))
+venn(list(G1, S, G2M)) # 发现G1与S有重复的基因
+G1.S <- intersect(G1, S)
+library(dplyr)
+G1 <- G1[-which(G1 %in% G1.S)]
+#S <- S[-which(S %in% G1.S)]
+G1
+G1 <- G1[-which(G1 %in% "202708_s_at")]
+G1
+S
+S <- S[!is.na(S)]
+S
+G2M
+#G2M <- G2M[-which(G2M %in% "254622")]
+#G2M
+venn(list(G1, S, G2M))
+markertest6 <- list(G1 = G1, S = S, G2M = G2M)
+markertest6
+save(markertest6, file = "E:\\Project\\GEPCycle\\GEPCycle\\data\\markertest6.rda")
+
+
+
+
+
+
+
+
+
+# revelio 中有G1S, S, G2, G2M, MG1
+revelio <- read.csv("Revelio cell cycle phase marker genes.csv", colClasses = "character")
+str(revelio)
+# peco有M, S, G1S, MG1, G2
+peco <- read.csv("peco cell cycle phase marker genes.csv", colClasses = "character")
+
+G1 <- reCAT$Genename[which(reCAT$Peaktime == "G1")]
+S.temp <- intersect(reCAT$Genename[which(reCAT$Peaktime == "S")], peco$S.gene)
+S.temp2 <- intersect(S.temp, revelio$S)
+S <- unique(c(seurat$S.genes, S.temp2))
+G2M <- seurat$G2M.genes
+library(gplots)
+#venn(list(reCAT$Genename[which(reCAT$Peaktime == "S")], reCAT$Genename[which(reCAT$Peaktime == "G2/M")]))
+venn(list(G1, S, G2M)) # 发现G1与S有重复的基因
+G1.S <- intersect(G1, S)
+library(dplyr)
+#G1 <- G1[-which(G1 %in% G1.S)]
+#S <- S[-which(S %in% G1.S)]
+G1
+G1 <- G1[-which(G1 %in% "202708_s_at")]
+G1
+S
+S <- S[!is.na(S)]
+S
+G2M
+#G2M <- G2M[-which(G2M %in% "254622")]
+#G2M
+venn(list(G1, S, G2M))
+markertest7 <- list(G1 = G1, S = S, G2M = G2M)
+markertest7
+save(markertest7, file = "E:\\Project\\GEPCycle\\GEPCycle\\data\\markertest7.rda")
+
+
+
+
+
+
+
+
+
+# revelio 中有G1S, S, G2, G2M, MG1
+revelio <- read.csv("Revelio cell cycle phase marker genes.csv", colClasses = "character")
+str(revelio)
+# peco有M, S, G1S, MG1, G2
+peco <- read.csv("peco cell cycle phase marker genes.csv", colClasses = "character")
+
+G1 <- reCAT$Genename[which(reCAT$Peaktime == "G1")]
+S.temp <- intersect(reCAT$Genename[which(reCAT$Peaktime == "S")], peco$S.gene)
+S.temp2 <- intersect(S.temp, revelio$S)
+S <- unique(c(seurat$S.genes, S.temp2))
+G2M.t <- intersect(revelio$G2.M, seurat$G2M.genes)
+G2M.t2 <- unique(c(G2M.t, reCAT$Genename[which(reCAT$Peaktime == "G2/M")]))
+
+library(gplots)
+#venn(list(reCAT$Genename[which(reCAT$Peaktime == "S")], reCAT$Genename[which(reCAT$Peaktime == "G2/M")]))
+venn(list(G1, S, G2M)) # 发现G1与S有重复的基因
+G1.S <- intersect(G1, S)
+library(dplyr)
+G1 <- G1[-which(G1 %in% G1.S)]
+#S <- S[-which(S %in% G1.S)]
+G1
+G1 <- G1[-which(G1 %in% "202708_s_at")]
+G1
+S
+S <- S[!is.na(S)]
+S
+G2M
+#G2M <- G2M[-which(G2M %in% "254622")]
+#G2M
+venn(list(G1, S, G2M))
+markertest8 <- list(G1 = G1, S = S, G2M = G2M)
+markertest8
+save(markertest8, file = "E:\\Project\\GEPCycle\\GEPCycle\\data\\markertest8.rda")
+
+
+
+
+
+
+
+
+
+
+
+
+
+setwd("E:\\Project\\MasterDOC\\DLBCL\\Graphics and PPT and Table\\graphics\\Cell cycle analysis for GEP in tissue\\gene marker")
+# revelio 中有G1S, S, G2, G2M, MG1
+revelio <- read.csv("Revelio cell cycle phase marker genes.csv", colClasses = "character")
+str(revelio)
+# peco有M, S, G1S, MG1, G2
+peco <- read.csv("peco cell cycle phase marker genes.csv", colClasses = "character")
+# seurat有S, G2M
+seurat <- read.csv("Seurat cell cycle phase  marker genes.csv", colClasses = "character")
+# reCAT有G1, G1S, G2, G2M, M S
+reCAT <- read.csv("reCAT-A cyclebase 3.0 378genes from dozens of cell cycle-related papers.csv", colClasses = "character")
+unique(reCAT$Peaktime)
+
+G1 <- reCAT$Genename[which(reCAT$Peaktime == "G1")]
+S.temp <- intersect(revelio$S, reCAT$Genename[which(reCAT$Peaktime == "S")])
+
+#S.temp2 <- intersect(peco$S.gene, seurat$S.genes)
+
+library(gplots)
+venn(list(revelio$S, reCAT$Genename[which(reCAT$Peaktime == "S")]))
+
+S <- unique(c(S.temp, seurat$S.genes))
+
+G2M.t <- intersect(revelio$G2.M, seurat$G2M.genes)
+G2M <- unique(c(G2M.t, reCAT$Genename[which(reCAT$Peaktime == "G2/M")]))
+
+#venn(list(reCAT$Genename[which(reCAT$Peaktime == "S")], reCAT$Genename[which(reCAT$Peaktime == "G2/M")]))
+venn(list(G1, S, G2M)) # 发现G1与S有重复的基因
+G1.S <- intersect(G1, S)
+library(dplyr)
+#G1 <- G1[-which(G1 %in% G1.S)]
+#S <- S[-which(S %in% G1.S)]
+G1
+G1 <- G1[-which(G1 %in% "202708_s_at")]
+G1
+S
+S <- S[!is.na(S)]
+S
+G2M
+#G2M <- G2M[-which(G2M %in% "254622")]
+#G2M
+venn(list(G1, S, G2M))
+markertest10 <- list(G1 = G1, S = S, G2M = G2M)
+markertest10
+save(markertest10, file = "E:\\Project\\GEPCycle\\GEPCycle\\data\\markertest10.rda")
+
+
+
+
+
+load("E:\\Project\\GEPCycle\\GEPCycle\\data\\marker3up.rda")
+load("E:\\Project\\GEPCycle\\GEPCycle\\data\\markertest.rda")
+markertest9 <- list(G1 = marker3.up$G1, S = marker3.up$S, G2M = markertest$G2M)
+markertest9$G1 <- markertest9$G1[-which(markertest9$G1 %in% "202708_s_at")]
+markertest9$S <- markertest9$S[!is.na(markertest9$S)]
+save(markertest9, file = "E:\\Project\\GEPCycle\\GEPCycle\\data\\markertest9.rda")
+
+
+load("E:\\Project\\GEPCycle\\GEPCycle\\data\\markertest9.rda")
+load("E:\\Project\\GEPCycle\\GEPCycle\\data\\marker3.rda")
+markertest11 <- list(G1 = markertest9$G1, S = marker3$S, G2M = markertest9$G2M)
+markertest11$S <- markertest11$S[!is.na(markertest11$S)]
+save(markertest11, file = "E:\\Project\\GEPCycle\\GEPCycle\\data\\markertest11.rda")
+
+
+
+
+
+
+
+
+
+
+
+
+
+# marker gene 测试list
+# 使用reCAT和seurat中的数据
+rm(list = ls())
+setwd("E:\\Project\\MasterDOC\\DLBCL\\Graphics and PPT and Table\\graphics\\Cell cycle analysis for GEP in tissue\\gene marker")
+# seurat有S, G2M
+seurat <- read.csv("Seurat cell cycle phase  marker genes.csv", colClasses = "character")
+# reCAT有G1, G1S, G2, G2M, M S
+reCAT <- read.csv("reCAT-A cyclebase 3.0 378genes from dozens of cell cycle-related papers.csv", colClasses = "character")
+unique(reCAT$Peaktime)
+
+G1 <- reCAT$Genename[which(reCAT$Peaktime == "G1")]
+S <- seurat$S.genes
+G2M <- seurat$G2M.genes
+library(gplots)
+venn(list(reCAT$Genename[which(reCAT$Peaktime == "S")], reCAT$Genename[which(reCAT$Peaktime == "G2/M")]))
+venn(list(G1, S, G2M)) # 发现G1与S有重复的基因
+
+G1 <- G1[-which(G1 %in% "202708_s_at")]
+S <- S[!is.na(S)]
+S
+venn(list(G1, S, G2M))
+genemarker <- list(G1 = G1, S = S, G2M = G2M)
+genemarker
+save(genemarker, file = "E:\\Project\\GEPCycle\\GEPCycle\\data\\genemarker.rda")
+

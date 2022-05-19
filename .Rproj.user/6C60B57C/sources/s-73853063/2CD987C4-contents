@@ -1,0 +1,187 @@
+rm(list = ls())
+setwd("E:\\Project\\MasterDOC\\DLBCL\\Graphics and PPT and Table\\graphics\\GSE10846-04\\PPT036_Cell cycle for 17010 genes")
+library(qdapTools)
+library(dplyr)
+
+# gene marker
+load("E:\\Project\\GEPCycle\\GEPCycle\\data\\markertest2.rda")
+
+
+CorFunction <- function(expr, marker) {
+
+  if (length(unique(rownames(expr))) != nrow(expr)) {
+    stop("The gene symbols in expression are not unique!")
+  }
+
+  # anti-log if max < 50 in mixture file
+  if(max(expr) < 50) {
+    expr <- 2^expr
+  }
+
+  # normalize expression matrix
+  normalize <- function(x) {
+    return((x - min(x)) / (max(x) - min(x)))
+  }
+
+  expr.pro <- apply(expr, 2, normalize) * 10
+
+  # update marker gene list, delete genes that not in expression
+  marker.new <- lapply(marker, function(x) {
+    x <- intersect(rownames(expr.pro), x)
+  })
+
+  # get sample by cell cycle phase matrix
+  avg <- as.data.frame(do.call(cbind,
+                               lapply(marker.new, function(x){
+                                 apply(expr.pro[x, ], 2, mean)
+                               })))
+
+  # calculate cor for marker and all cell cycle phase
+  marker.end <- list()
+  corScore <- list()
+  for (i in 1:length(marker.new)){
+    phase <- c()
+    score <- c()
+    for (j in 1:length(marker.new[[i]])){
+      temp <- cor.test(as.numeric(expr.pro[marker.new[[i]][j], ]),
+                       as.numeric(avg[, i]))
+      if (!is.na(temp$estimate)) { # & temp$estimate > 0
+        phase <- c(phase, marker.new[[i]][j])
+        score <- c(score, temp$estimate)
+      }
+    }
+    marker.end <- c(marker.end, list(phase))
+    corScore <- c(corScore, list(score))
+  }
+  names(corScore) <- names(marker.new)
+  names(marker.end) <- names(marker.new) 
+
+  # get cell cycle phase score in every sample
+  res <- matrix(0L, length(marker.end), ncol(expr.pro))
+  for (i in 1:length(marker.end)) {
+    for (j in 1:ncol(expr.pro)) {
+      res[i, j] <- sum(as.numeric(expr.pro[marker.end[[i]], j]) * (1 + exp(as.numeric(corScore[[i]]))))
+    }
+  }
+  rownames(res) <- names(marker.end)
+  colnames(res) <- colnames(expr.pro)
+
+  # 瑕佷繚璇乺es鏁版嵁閮芥槸澶т簬0鐨?
+  out <- res - apply(res, 1, function(x){floor(min(x))})
+
+  # get every cell phase proportion in samples
+  out <- apply(out, 2, function(x){x / sum(x)})
+
+}
+
+
+
+
+# 鎴戠殑鍩哄洜琛ㄨ揪鐭╅樀
+# 17010琛屽熀鍥狅紝414鍒楁牱鏈?
+expr <- read.csv("E:\\Project\\MasterDOC\\DLBCL\\data\\GSE10846\\06_GSE10846_ProteinCoding\\Copy-NoNA_join_onegenesymbol_only_proteincoding_GCRh37.75_414 patients GSE10846.csv",
+                 row.names = 1)
+str(expr)
+
+clinical <- read.csv("E:\\Project\\MasterDOC\\DLBCL\\Graphics and PPT and Table\\graphics\\GSE10846-04\\PPT005_Survival for CHOP or RCHOP consensus 2 with 17010 genes\\PPT005_01.03_Clinical add survival group by consensus order_06-04-2021.csv")
+
+expr.good <- expr[, clinical$Patients[which(clinical$consensus == "good")]]
+expr.poor <- expr[, clinical$Patients[which(clinical$consensus == "poor")]]
+
+good.res <- CorFunction(expr.good, markertest2)
+poor.res <- CorFunction(expr.poor, markertest2)
+
+all.res <- rbind(t(good.res), t(poor.res))
+write.csv(all.res, "PPT036_03.00_Cell cycle phase proportion for 414 patients markertest2_09-07-2021.csv")
+
+# -----缁樺埗barplot鍥?--------
+library(tidyr)
+library(ggplot2)
+library(cowplot)
+
+good.t <- data.frame(t(good.res))
+good.t$Sample <- rownames(good.t)
+poor.t <- data.frame(t(poor.res))
+poor.t$Sample <- rownames(poor.t)
+good.t$Group <- rep("good", nrow(good.t))
+poor.t$Group <- rep("poor", nrow(poor.t))
+pic.data <- rbind(good.t, poor.t)
+
+## 鍩哄洜琛ㄨ揪鏁版嵁gather,gather鐨勮寖鍥村簲璋冩暣
+all.p <- gather(pic.data, key = "Phase", value = "Proportion", G1:G2M)
+all.p$Phase <- factor(all.p$Phase, levels = c("G1", "S", "G2M"))
+
+
+g1 <- ggplot(all.p) +
+  geom_bar(aes(x = Sample, y = Proportion, fill = Phase),
+           stat = "identity") +
+  facet_wrap( ~ Group, scales = "free") +
+  scale_fill_manual(values = c("#ffb61e", "#F5F5DC", "#6666CC")) +#FF9900#FFFFCC
+  labs(x = "Sample", y = "Proportion", fill = "Phase") +
+  ggtitle("") +
+  scale_y_continuous(labels = scales::percent) +
+  scale_x_discrete(expand = c(0, 0)) +
+  theme(axis.title = element_text(face="bold"),
+        axis.text.y = element_text(size = 8),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        strip.text.x = element_text(size = 12, face = "bold"), # 鍒嗛潰鐨勪笂鏂规爣棰?
+        legend.title = element_text(face="bold", size = 12))
+
+g1
+
+pdf("PPT036_03.01_Barplot for GSE10846 cell cycle result markertest2_09-07-2021.pdf", useDingbats = FALSE, width = 8, height = 4)
+g1
+dev.off()
+
+
+
+# ----------缁樺埗灏忔彁鐞淬€佺绾垮浘鍙犲姞鍥? -------------
+library(ggpubr)
+
+g2 <- ggplot(all.p, aes(x = Group, y = Proportion, fill = Group)) +
+  geom_violin(trim = FALSE, color = "black") +
+  geom_boxplot(fill = "white", width = 0.2,
+               position = position_dodge(1)) +
+  scale_fill_manual(values = c("good" = "#FC4E07", "poor" = "#00AFBB")) +
+  facet_wrap( ~ Phase, scales = "fixed") +
+  xlab("") +
+  scale_y_continuous(labels = scales::percent) +
+  stat_compare_means() + #comparisons = list(c("Good", "Poor"))
+  theme_bw() +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title = element_text(face = "bold"),
+        axis.text.y = element_text(size = 8),
+        legend.title = element_text(face="bold", size = 12),
+        strip.text.x = element_text(size = 12, face="bold"),
+        panel.grid.major = element_blank(), #涓嶆樉绀虹綉鏍肩嚎
+        panel.grid.minor = element_blank())
+g2
+
+pdf("PPT036_03.02_Boxplot for GSE10846 cell cycle result markertest2_09-07-2021.pdf", useDingbats = FALSE, width = 12, height = 8)
+g2
+dev.off()
+
+
+#
+# # ----------缁樺埗瀵嗗害鍥?------------
+# g3 <- ggplot(all.p, aes(x = Proportion)) +
+#   geom_density(aes(fill = Phase), alpha = 0.9) +
+#   facet_wrap( ~ Group, scales = "fixed") +
+#   xlab("Proportion") +
+#   ylab("Density") +
+#   theme_bw() +
+#   theme(axis.title = element_text(face="bold"),
+#         axis.text = element_text(size = 8),
+#         legend.title = element_text(face="bold", size = 12),
+#         strip.text.x = element_text(size = 12, face="bold"),
+#         panel.grid.major = element_blank(), #涓嶆樉绀虹綉鏍肩嚎
+#         panel.grid.minor = element_blank())
+#
+# g3#geom_vline(data = poor.mean, aes(xintercept = Proportion, color = Phase), linetype="dashed")
+#
+# pdf("PPT036_02.03_DensityPlot for GSE10846 cell cycle result_08-16-2021.pdf", useDingbats = FALSE, width = 8, height = 4)
+# g3
+# dev.off()
+
