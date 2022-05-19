@@ -7,6 +7,7 @@ To calculated the relative proportion of cells in each cell cycle phase for 414 
 
 
 An example:
+
 source("R/rpCycle.R")
 
 load("data/expr.rda")
